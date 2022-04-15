@@ -4,35 +4,35 @@
 #define STB_TRUETYPE_IMPLEMENTATION
 #include"stb/stb_truetype.h"
 #include "ButiFont.h"
-#include"../Header/Common/ButiMath.h"
+#include"../ButiMath/ButiMath.h"
 
-const int FONT_ATLAS_DEFAULT_TEX_DATA_W = 108;
-const int FONT_ATLAS_DEFAULT_TEX_DATA_H = 27;
+const std::int32_t FONT_ATLAS_DEFAULT_TEX_DATA_W = 108;
+const std::int32_t FONT_ATLAS_DEFAULT_TEX_DATA_H = 27;
 #define DRAWLIST_TEX_LINES_WIDTH_MAX (63)
 #define TABSIZE                      (4)
 #define UNICODE_CODEPOINT_MAX     0xFFFF     
 #define UNICODE_CODEPOINT_INVALID 0xFFFD     
 
-static void UnpackAccumulativeOffsetsIntoRanges(int base_codepoint, const unsigned short* accumulative_offsets, int accumulative_offsets_count, unsigned short* out_ranges)
+static void UnpackAccumulativeOffsetsIntoRanges(std::int32_t base_codepoint, const std::uint16_t* accumulative_offsets, std::int32_t accumulative_offsets_count, std::uint16_t* out_ranges)
 {
-    for (int n = 0; n < accumulative_offsets_count; n++, out_ranges += 2)
+    for (std::int32_t n = 0; n < accumulative_offsets_count; n++, out_ranges += 2)
     {
-        out_ranges[0] = out_ranges[1] = (unsigned short)(base_codepoint + accumulative_offsets[n]);
+        out_ranges[0] = out_ranges[1] = (std::uint16_t)(base_codepoint + accumulative_offsets[n]);
         base_codepoint += accumulative_offsets[n];
     }
     out_ranges[0] = 0;
 }
 
 static inline bool      CharIsBlankA(char c) { return c == ' ' || c == '\t'; }
-static inline bool      CharIsBlankW(unsigned int c) { return c == ' ' || c == '\t' || c == 0x3000; }
-const unsigned short* GetGlyphRangesJapanese()
+static inline bool      CharIsBlankW(std::uint32_t c) { return c == ' ' || c == '\t' || c == 0x3000; }
+const std::uint16_t* GetGlyphRangesJapanese()
 {
     // 1946 common ideograms code points for Japanese
     // Sourced from http://theinstructionlimit.com/common-kanji-character-ranges-for-xna-spritefont-rendering
     // FIXME: Source a list of the revised 2136 Joyo Kanji list from 2010 and rebuild this.
     // You can use ImFontGlyphRangesBuilder to create your own ranges derived from this, by merging existing ranges or adding new characters.
     // (Stored as accumulative offsets from the initial unicode codepoint 0x4E00. This encoding is designed to helps us compact the source code size.)
-    static const unsigned short accumulative_offsets_from_0x4E00[] =
+    static const std::uint16_t accumulative_offsets_from_0x4E00[] =
     {
         0,1,2,4,1,1,1,1,2,1,6,2,2,1,8,5,7,11,1,2,10,10,8,2,4,20,2,11,8,2,1,2,1,6,2,1,7,5,3,7,1,1,13,7,9,1,4,6,1,2,1,10,1,1,9,2,2,4,5,6,14,1,1,9,3,18,
         5,4,2,2,10,7,1,1,1,3,2,4,3,23,2,10,12,2,14,2,4,13,1,6,10,3,1,7,13,6,4,13,5,2,3,17,2,2,5,7,6,4,1,7,14,16,6,13,9,15,1,1,7,16,4,7,1,19,9,2,7,15,
@@ -67,16 +67,16 @@ const unsigned short* GetGlyphRangesJapanese()
         1,2,2,3,8,1,4,4,1,5,7,1,4,3,20,4,9,1,1,1,5,5,17,1,5,2,6,2,4,1,4,5,7,3,18,11,11,32,7,5,4,7,11,127,8,4,3,3,1,10,1,1,6,21,14,1,16,1,7,1,3,6,9,65,
         51,4,3,13,3,10,1,1,12,9,21,110,3,19,24,1,1,10,62,4,1,29,42,78,28,20,18,82,6,3,15,6,84,58,253,15,155,264,15,21,9,14,7,58,40,39,
     };
-    static unsigned short base_ranges[] = // not zero-terminated
+    static std::uint16_t base_ranges[] = // not zero-terminated
     {
         0x0020, 0x00FF, // Basic Latin + Latin Supplement
         0x3000, 0x30FF, // CJK Symbols and Punctuations, Hiragana, Katakana
         0x31F0, 0x31FF, // Katakana Phonetic Extensions
         0xFF00, 0xFFEF  // Half-width characters
     };
-    const auto baseSize = sizeof(base_ranges) / sizeof(unsigned short);
-    const auto japaneseSize = sizeof(accumulative_offsets_from_0x4E00) / sizeof(unsigned short);
-    static unsigned short full_ranges[baseSize + japaneseSize * 2 + 1] = { 0 };
+    const auto baseSize = sizeof(base_ranges) / sizeof(std::uint16_t);
+    const auto japaneseSize = sizeof(accumulative_offsets_from_0x4E00) / sizeof(std::uint16_t);
+    static std::uint16_t full_ranges[baseSize + japaneseSize * 2 + 1] = { 0 };
     if (!full_ranges[0])
     {
         memcpy(full_ranges, base_ranges, sizeof(base_ranges));
@@ -119,30 +119,30 @@ static const ButiEngine::Vector2 FONT_ATLAS_DEFAULT_TEX_CURSOR_DATA[GuiMouseCurs
 };
 
 
-inline bool          BitArrayTestBit(const unsigned int* arr, int n) { unsigned int mask = (unsigned int)1 << (n & 31); return (arr[n >> 5] & mask) != 0; }
-inline void          BitArrayClearBit(unsigned int* arr, int n) { unsigned int mask = (unsigned int)1 << (n & 31); arr[n >> 5] &= ~mask; }
-inline void          BitArraySetBit(unsigned int* arr, int n) { unsigned int mask = (unsigned int)1 << (n & 31); arr[n >> 5] |= mask; }
-inline void          BitArraySetBitRange(unsigned int* arr, int n, int n2) {
+inline bool          BitArrayTestBit(const std::uint32_t* arr, std::int32_t n) { std::uint32_t mask = (std::uint32_t)1 << (n & 31); return (arr[n >> 5] & mask) != 0; }
+inline void          BitArrayClearBit(std::uint32_t* arr, std::int32_t n) { std::uint32_t mask = (std::uint32_t)1 << (n & 31); arr[n >> 5] &= ~mask; }
+inline void          BitArraySetBit(std::uint32_t* arr, std::int32_t n) { std::uint32_t mask = (std::uint32_t)1 << (n & 31); arr[n >> 5] |= mask; }
+inline void          BitArraySetBitRange(std::uint32_t* arr, std::int32_t n, std::int32_t n2) {
     while (n <= n2)
     {
-        int a_mod = (n & 31);
-        int b_mod = ((n2 >= n + 31) ? 31 : (n2 & 31)) + 1;
-        unsigned int mask = (unsigned int)(((unsigned long long int)1 << b_mod) - 1) & ~(unsigned int)(((unsigned long long int)1 << a_mod) - 1);
+        std::int32_t a_mod = (n & 31);
+        std::int32_t b_mod = ((n2 >= n + 31) ? 31 : (n2 & 31)) + 1;
+        std::uint32_t mask = (std::uint32_t)(((std::uint64_t)1 << b_mod) - 1) & ~(std::uint32_t)(((std::uint64_t)1 << a_mod) - 1);
         arr[n >> 5] |= mask;
         n = (n + 32) & ~31;
     }
 }
 
-static inline int       UpperPowerOfTwo(int v) { v--; v |= v >> 1; v |= v >> 2; v |= v >> 4; v |= v >> 8; v |= v >> 16; v++; return v; }
+static inline std::int32_t       UpperPowerOfTwo(std::int32_t v) { v--; v |= v >> 1; v |= v >> 2; v |= v >> 4; v |= v >> 8; v |= v >> 16; v++; return v; }
 
 struct BitVector
 {
-    std::vector<unsigned int> Storage;
-    void            Create(const int sz) { Storage.resize((sz + 31) >> 5); memset(Storage.data(), 0, (size_t)Storage.size() * sizeof(Storage[0])); }
+    std::vector<std::uint32_t> Storage;
+    void            Create(const std::int32_t sz) { Storage.resize((sz + 31) >> 5); memset(Storage.data(), 0, (size_t)Storage.size() * sizeof(Storage[0])); }
     void            Clear() { Storage.clear(); }
-    bool            TestBit(const int n) const { return BitArrayTestBit(Storage.data(), n); }
-    void            SetBit(const int n) { BitArraySetBit(Storage.data(), n); }
-    void            ClearBit(const int n) { BitArrayClearBit(Storage.data(), n); }
+    bool            TestBit(const std::int32_t n) const { return BitArrayTestBit(Storage.data(), n); }
+    void            SetBit(const std::int32_t n) { BitArraySetBit(Storage.data(), n); }
+    void            ClearBit(const std::int32_t n) { BitArrayClearBit(Storage.data(), n); }
 
 };
 class Font;
@@ -164,25 +164,25 @@ struct FontLoadData {
         MergeMode = false;
         RasterizerFlags = 0x00;
         RasterizerMultiply = 1.0f;
-        EllipsisChar = (unsigned short)-1;
+        EllipsisChar = (std::uint16_t)-1;
 
         dst_font = nullptr;
     }
     void* FontData;
-    int             FontDataSize;
+    std::int32_t             FontDataSize;
     bool            FontDataOwnedByAtlas;
-    int             FontNo;
+    std::int32_t             FontNo;
     float           SizePixels;
-    int             OversampleH;
-    int             OversampleV;
+    std::int32_t             OversampleH;
+    std::int32_t             OversampleV;
     bool            PixelSnapH;
     ButiEngine::Vector2         GlyphExtraSpacing;
     ButiEngine::Vector2         GlyphOffset;
-    const unsigned short* GlyphRanges;
+    const std::uint16_t* GlyphRanges;
     float           GlyphMinAdvanceX;
     float           GlyphMaxAdvanceX;
     bool            MergeMode;
-    unsigned int    RasterizerFlags;
+    std::uint32_t    RasterizerFlags;
     float           RasterizerMultiply;
     char         EllipsisChar;
     std::shared_ptr<Font >dst_font;
@@ -192,19 +192,19 @@ struct FontLoadData {
 
 class FontInformation :public ButiFont::IFontInformation {
 public:
-    FontInformation(const std::vector< ButiFont::FontGlyph>& arg_vec_glyphs, const int arg_fallbackIndex, const std::vector<unsigned short>& arg_vec_indexLookup, const int arg_size)
+    FontInformation(const std::vector< ButiFont::FontGlyph>& arg_vec_glyphs, const std::int32_t arg_fallbackIndex, const std::vector<std::uint16_t>& arg_vec_indexLookup, const std::int32_t arg_size)
         :vec_glyphs(arg_vec_glyphs), vec_indexLookup(arg_vec_indexLookup), size(arg_size) {
         p_fallback = &vec_glyphs[vec_indexLookup[arg_fallbackIndex]];
     }
-    const ButiFont::FontGlyph* * FindGlyphs_utf8(const char* arg_srcStr, int& arg_ref_glyphSize)const override;
-    int GetSize()const override {
+    const ButiFont::FontGlyph* * FindGlyphs_utf8(const char* arg_srcStr, std::int32_t& arg_ref_glyphSize)const override;
+    std::int32_t GetSize()const override {
         return  size;
     }
 private:
     std::vector< ButiFont::FontGlyph> vec_glyphs;
     ButiFont::FontGlyph* p_fallback;
-    std::vector<unsigned short>           vec_indexLookup;
-    int size;
+    std::vector<std::uint16_t>           vec_indexLookup;
+    std::int32_t size;
 };
 
 struct FontBuildSrcData
@@ -213,58 +213,58 @@ struct FontBuildSrcData
     stbtt_pack_range    PackRange;        
     stbrp_rect* Rects;      
     stbtt_packedchar* PackedChars; 
-    const unsigned short int* SrcRanges;    
-    int                 DstIndex;     
-    int                 GlyphsHighest;
-    int                 GlyphsCount;  
+    const std::uint16_t * SrcRanges;    
+    std::int32_t                 DstIndex;     
+    std::int32_t                 GlyphsHighest;
+    std::int32_t                 GlyphsCount;  
     BitVector GlyphsSet;
-    std::vector<int>      GlyphsList; 
+    std::vector<std::int32_t>      GlyphsList; 
 };
 
-static void UnpackBitVectorToFlatIndexList(const BitVector* in, std::vector<int>* out)
+static void UnpackBitVectorToFlatIndexList(const BitVector* in, std::vector<std::int32_t>* out)
 {
 
     auto begin = in->Storage.begin();
     auto it_end = in->Storage.end();
     for (auto it = begin; it < it_end; it++) {
-        if (unsigned int entries_32 = *it) {
-            for (unsigned int bit_n = 0; bit_n < 32; bit_n++)
-                if (entries_32 & ((unsigned int)1 << bit_n))
-                    out->push_back((int)(((it - begin) << 5) + bit_n));
+        if (std::uint32_t entries_32 = *it) {
+            for (std::uint32_t bit_n = 0; bit_n < 32; bit_n++)
+                if (entries_32 & ((std::uint32_t)1 << bit_n))
+                    out->push_back((std::int32_t)(((it - begin) << 5) + bit_n));
         }
     }
 }
 
 void    FontAtlasBuildMultiplyCalcLookupTable(unsigned char out_table[256], float in_brighten_factor)
 {
-    for (unsigned int i = 0; i < 256; i++)
+    for (std::uint32_t i = 0; i < 256; i++)
     {
-        unsigned int value = (unsigned int)(i * in_brighten_factor);
+        std::uint32_t value = (std::uint32_t)(i * in_brighten_factor);
         out_table[i] = value > 255 ? 255 : (value & 0xFF);
     }
 }
-void    FontAtlasBuildMultiplyRectAlpha8(const unsigned char table[256], unsigned char* pixels, int x, int y, int w, int h, int stride)
+void    FontAtlasBuildMultiplyRectAlpha8(const unsigned char table[256], unsigned char* pixels, std::int32_t x, std::int32_t y, std::int32_t w, std::int32_t h, std::int32_t stride)
 {
     unsigned char* data = pixels + x + y * stride;
-    for (int j = h; j > 0; j--, data += stride)
-        for (int i = 0; i < w; i++)
+    for (std::int32_t j = h; j > 0; j--, data += stride)
+        for (std::int32_t i = 0; i < w; i++)
             data[i] = table[data[i]];
 }
 
 
 struct FontBuildDstData
 {
-    int                 SrcCount;          
-    int                 GlyphsHighest;
-    int                 GlyphsCount;
+    std::int32_t                 SrcCount;          
+    std::int32_t                 GlyphsHighest;
+    std::int32_t                 GlyphsCount;
     BitVector         GlyphsSet;      
 };
 
 struct FontAtlasCustomRect
 {
-    unsigned unsigned short  Width, Height;  
-    unsigned unsigned short  X, Y;           
-    unsigned int    GlyphID;       
+    std::uint16_t  Width, Height;  
+    std::uint16_t  X, Y;           
+    std::uint32_t    GlyphID;       
     float           GlyphAdvanceX; 
     ButiEngine::Vector2          GlyphOffset;   
     Font* font;
@@ -275,16 +275,16 @@ struct FontAtlasCustomRect
 
 struct FontGlyphRangesBuilder
 {
-    std::vector<unsigned int> UsedChars;          
+    std::vector<std::uint32_t> UsedChars;          
 
     FontGlyphRangesBuilder() { Clear(); }
-    inline void     Clear() { int size_in_bytes = (0xFFFF + 1) / 8; UsedChars.resize(size_in_bytes / (int)sizeof(unsigned int)); memset(UsedChars.data(), 0, (size_t)size_in_bytes); }
-    inline bool     GetBit(size_t n) const { int off = (int)(n >> 5); unsigned int mask = 1u << (n & 31); return (UsedChars[off] & mask) != 0; } 
-    inline void     SetBit(size_t n) { int off = (int)(n >> 5); unsigned int mask = 1u << (n & 31); UsedChars[off] |= mask; }         
-    inline void     AddChar(unsigned short c) { SetBit(c); }            
+    inline void     Clear() { std::int32_t size_in_bytes = (0xFFFF + 1) / 8; UsedChars.resize(size_in_bytes / (std::int32_t)sizeof(std::uint32_t)); memset(UsedChars.data(), 0, (size_t)size_in_bytes); }
+    inline bool     GetBit(size_t n) const { std::int32_t off = (std::int32_t)(n >> 5); std::uint32_t mask = 1u << (n & 31); return (UsedChars[off] & mask) != 0; } 
+    inline void     SetBit(size_t n) { std::int32_t off = (std::int32_t)(n >> 5); std::uint32_t mask = 1u << (n & 31); UsedChars[off] |= mask; }         
+    inline void     AddChar(std::uint16_t c) { SetBit(c); }            
     void  AddText(const char* text, const char* text_end = nullptr);    
-    void  AddRanges(const unsigned short* ranges);                      
-    void  BuildRanges(std::vector<unsigned short>* out_ranges);         
+    void  AddRanges(const std::uint16_t* ranges);                      
+    void  BuildRanges(std::vector<std::uint16_t>* out_ranges);         
 };
 
 struct FontAtlas
@@ -299,25 +299,25 @@ struct FontAtlas
     void              ClearFonts();
     void              Clear();
 
-    void              GetTexDataAsAlpha8(unsigned char** out_pixels, int* out_width, int* out_height, int* out_bytes_per_pixel = nullptr);
+    void              GetTexDataAsAlpha8(unsigned char** out_pixels, std::int32_t* out_width, std::int32_t* out_height, std::int32_t* out_bytes_per_pixel = nullptr);
 
 
-    const unsigned short* GetGlyphRangesDefault();
+    const std::uint16_t* GetGlyphRangesDefault();
 
-    int               AddCustomRectRegular(int width, int height);
+    std::int32_t               AddCustomRectRegular(std::int32_t width, std::int32_t height);
 
     void              CalcCustomRectUV(const FontAtlasCustomRect* rect, ButiEngine::Vector2* out_uv_min, ButiEngine::Vector2* out_uv_max) const;
-    bool              GetMouseCursorTexData(const int cursor, ButiEngine::Vector2* out_offset, ButiEngine::Vector2* out_size, ButiEngine::Vector2 out_uv_border[2], ButiEngine::Vector2 out_uv_fill[2]);
-    FontAtlasCustomRect* GetCustomRectByIndex(int index) { assert(index >= 0); return &CustomRects[index]; }
+    bool              GetMouseCursorTexData(const std::int32_t cursor, ButiEngine::Vector2* out_offset, ButiEngine::Vector2* out_size, ButiEngine::Vector2 out_uv_border[2], ButiEngine::Vector2 out_uv_fill[2]);
+    FontAtlasCustomRect* GetCustomRectByIndex(std::int32_t index) { assert(index >= 0); return &CustomRects[index]; }
     bool Locked;
-    int  Flags;
-    int  TexDesiredWidth;
-    int  TexGlyphPadding;
+    std::int32_t  Flags;
+    std::int32_t  TexDesiredWidth;
+    std::int32_t  TexGlyphPadding;
 
     unsigned char* TexPixelsAlpha8;
-    unsigned int* TexPixelsRGBA32;
-    int                         TexWidth;
-    int                         TexHeight;
+    std::uint32_t* TexPixelsRGBA32;
+    std::int32_t                         TexWidth;
+    std::int32_t                         TexHeight;
     ButiEngine::Vector2         TexUvScale;
     ButiEngine::Vector2         TexUvWhitePixel;
     std::vector<FontAtlasCustomRect> CustomRects;
@@ -325,8 +325,8 @@ struct FontAtlas
     ButiEngine::Vector4                      TexUvLines[0xFFFF + 1];
 
     // [Internal] Packing data
-    int                         PackIdMouseCursors;
-    int                         PackIdLines;
+    std::int32_t                         PackIdMouseCursors;
+    std::int32_t                         PackIdLines;
     std::vector<std::shared_ptr< Font>> fonts;
     std::vector<std::shared_ptr< FontLoadData>> configs;
 #ifndef GUI_DISABLE_OBSOLETE_FUNCTIONS
@@ -341,27 +341,27 @@ struct Font
     float                       FallbackAdvanceX;
     float                       FontSize;
 
-    std::vector<unsigned short>           IndexLookup;
+    std::vector<std::uint16_t>           IndexLookup;
     std::vector<ButiFont::FontGlyph>       Glyphs;
     const ButiFont::FontGlyph* FallbackGlyph;
 
 
     FontAtlas* ContainerAtlas;
     const FontLoadData* ConfigData;
-    unsigned short                       ConfigDataCount;
-    unsigned short                     FallbackChar;
-    unsigned short EllipsisChar;
+    std::uint16_t                       ConfigDataCount;
+    std::uint16_t                     FallbackChar;
+    std::uint16_t EllipsisChar;
     bool                        DirtyLookupTables;
     float                       Scale;
     float                       Ascent, Descent;
-    int                         MetricsTotalSurface;
+    std::int32_t                         MetricsTotalSurface;
     char Used4kPagesMap[(0xFFFF + 1) / 4096 / 8];
 
     Font();
     ~Font();
-    const ButiFont::FontGlyph* FindGlyph(unsigned short c) const;
-    const ButiFont::FontGlyph* FindGlyphNoFallback(unsigned short c) const;
-    float                       GetCharAdvance(unsigned short c) const { return ((int)c < IndexAdvanceX.size()) ? IndexAdvanceX[(int)c] : FallbackAdvanceX; }
+    const ButiFont::FontGlyph* FindGlyph(std::uint16_t c) const;
+    const ButiFont::FontGlyph* FindGlyphNoFallback(std::uint16_t c) const;
+    float                       GetCharAdvance(std::uint16_t c) const { return ((std::int32_t)c < IndexAdvanceX.size()) ? IndexAdvanceX[(std::int32_t)c] : FallbackAdvanceX; }
     bool                        IsLoaded() const { return ContainerAtlas != nullptr; }
     const char* GetDebugName() const { return ConfigData ? ConfigData->name.c_str() : "<unknown>"; }
 
@@ -370,12 +370,12 @@ struct Font
 
     void              BuildLookupTable();
     void              ClearOutputData();
-    void              GrowIndex(int new_size);
-    void              AddGlyph(const FontLoadData* src_cfg, unsigned short c, float x0, float y0, float x1, float y1, float u0, float v0, float u1, float v1, float advance_x);
-    void              AddRemapChar(unsigned short dst, unsigned short src, bool overwrite_dst = true); // Makes 'dst' character/glyph points to 'src' character/glyph. Currently needs to be called AFTER fonts have been built.
-    void              SetGlyphVisible(unsigned short c, bool visible);
-    void              SetFallbackChar(unsigned short c);
-    bool              IsGlyphRangeUnused(unsigned int c_begin, unsigned int c_last);
+    void              GrowIndex(std::int32_t new_size);
+    void              AddGlyph(const FontLoadData* src_cfg, std::uint16_t c, float x0, float y0, float x1, float y1, float u0, float v0, float u1, float v1, float advance_x);
+    void              AddRemapChar(std::uint16_t dst, std::uint16_t src, bool overwrite_dst = true); // Makes 'dst' character/glyph points to 'src' character/glyph. Currently needs to be called AFTER fonts have been built.
+    void              SetGlyphVisible(std::uint16_t c, bool visible);
+    void              SetFallbackChar(std::uint16_t c);
+    bool              IsGlyphRangeUnused(std::uint32_t c_begin, std::uint32_t c_last);
 };
 void FontAtlasBuildInit(FontAtlas* atlas)
 {
@@ -395,13 +395,13 @@ void FontAtlasBuildInit(FontAtlas* atlas)
     }
 }
 
-int TextCharFromUtf8(unsigned int* out_char, const char* in_text, const char* in_text_end)
+std::int32_t TextCharFromUtf8(std::uint32_t* out_char, const char* in_text, const char* in_text_end)
 {
-    unsigned int c = (unsigned int)-1;
+    std::uint32_t c = (std::uint32_t)-1;
     const unsigned char* str = (const unsigned char*)in_text;
     if (!(*str & 0x80))
     {
-        c = (unsigned int)(*str++);
+        c = (std::uint32_t)(*str++);
         *out_char = c;
         return 1;
     }
@@ -410,7 +410,7 @@ int TextCharFromUtf8(unsigned int* out_char, const char* in_text, const char* in
         *out_char = UNICODE_CODEPOINT_INVALID;
         if (in_text_end && in_text_end - (const char*)str < 2) return 1;
         if (*str < 0xc2) return 2;
-        c = (unsigned int)((*str++ & 0x1f) << 6);
+        c = (std::uint32_t)((*str++ & 0x1f) << 6);
         if ((*str & 0xc0) != 0x80) return 2;
         c += (*str++ & 0x3f);
         *out_char = c;
@@ -422,9 +422,9 @@ int TextCharFromUtf8(unsigned int* out_char, const char* in_text, const char* in
         if (in_text_end && in_text_end - (const char*)str < 3) return 1;
         if (*str == 0xe0 && (str[1] < 0xa0 || str[1] > 0xbf)) return 3;
         if (*str == 0xed && str[1] > 0x9f) return 3;
-        c = (unsigned int)((*str++ & 0x0f) << 12);
+        c = (std::uint32_t)((*str++ & 0x0f) << 12);
         if ((*str & 0xc0) != 0x80) return 3;
-        c += (unsigned int)((*str++ & 0x3f) << 6);
+        c += (std::uint32_t)((*str++ & 0x3f) << 6);
         if ((*str & 0xc0) != 0x80) return 3;
         c += (*str++ & 0x3f);
         *out_char = c;
@@ -437,11 +437,11 @@ int TextCharFromUtf8(unsigned int* out_char, const char* in_text, const char* in
         if (*str > 0xf4) return 4;
         if (*str == 0xf0 && (str[1] < 0x90 || str[1] > 0xbf)) return 4;
         if (*str == 0xf4 && str[1] > 0x8f) return 4;
-        c = (unsigned int)((*str++ & 0x07) << 18);
+        c = (std::uint32_t)((*str++ & 0x07) << 18);
         if ((*str & 0xc0) != 0x80) return 4;
-        c += (unsigned int)((*str++ & 0x3f) << 12);
+        c += (std::uint32_t)((*str++ & 0x3f) << 12);
         if ((*str & 0xc0) != 0x80) return 4;
-        c += (unsigned int)((*str++ & 0x3f) << 6);
+        c += (std::uint32_t)((*str++ & 0x3f) << 6);
         if ((*str & 0xc0) != 0x80) return 4;
         c += (*str++ & 0x3f);
 
@@ -455,30 +455,30 @@ int TextCharFromUtf8(unsigned int* out_char, const char* in_text, const char* in
     return 0;
 }
 
-int TextStrFromUtf8(unsigned short* buf, int buf_size, const char* in_text, const char* in_text_end, const char** in_text_remaining)
+std::int32_t TextStrFromUtf8(std::uint16_t* buf, std::int32_t buf_size, const char* in_text, const char* in_text_end, const char** in_text_remaining)
 {
-    unsigned short* buf_out = buf;
-    unsigned short* buf_end = buf + buf_size;
+    std::uint16_t* buf_out = buf;
+    std::uint16_t* buf_end = buf + buf_size;
     while (buf_out < buf_end - 1 && (!in_text_end || in_text < in_text_end) && *in_text)
     {
-        unsigned int c;
+        std::uint32_t c;
         in_text += TextCharFromUtf8(&c, in_text, in_text_end);
         if (c == 0)
             break;
-        *buf_out++ = (unsigned short)c;
+        *buf_out++ = (std::uint16_t)c;
     }
     *buf_out = 0;
     if (in_text_remaining)
         *in_text_remaining = in_text;
-    return (int)(buf_out - buf);
+    return (std::int32_t)(buf_out - buf);
 }
 
-int TextCountCharsFromUtf8(const char* in_text, const char* in_text_end)
+std::int32_t TextCountCharsFromUtf8(const char* in_text, const char* in_text_end)
 {
-    int char_count = 0;
+    std::int32_t char_count = 0;
     while ((!in_text_end || in_text < in_text_end) && *in_text)
     {
-        unsigned int c;
+        std::uint32_t c;
         in_text += TextCharFromUtf8(&c, in_text, in_text_end);
         if (c == 0)
             break;
@@ -487,7 +487,7 @@ int TextCountCharsFromUtf8(const char* in_text, const char* in_text_end)
     return char_count;
 }
 
-static inline int TextCharToUtf8(char* buf, int buf_size, unsigned int c)
+static inline std::int32_t TextCharToUtf8(char* buf, std::int32_t buf_size, std::uint32_t c)
 {
     if (c < 0x80)
     {
@@ -522,13 +522,13 @@ static inline int TextCharToUtf8(char* buf, int buf_size, unsigned int c)
     return 0;
 }
 
-int TextCountUtf8BytesFromChar(const char* in_text, const char* in_text_end)
+std::int32_t TextCountUtf8BytesFromChar(const char* in_text, const char* in_text_end)
 {
-    unsigned int unused = 0;
+    std::uint32_t unused = 0;
     return TextCharFromUtf8(&unused, in_text, in_text_end);
 }
 
-static inline int TextCountUtf8BytesFromChar(unsigned int c)
+static inline std::int32_t TextCountUtf8BytesFromChar(std::uint32_t c)
 {
     if (c < 0x80) return 1;
     if (c < 0x800) return 2;
@@ -537,20 +537,20 @@ static inline int TextCountUtf8BytesFromChar(unsigned int c)
     return 3;
 }
 
-int TextStrToUtf8(char* buf, int buf_size, const unsigned short* in_text, const unsigned short* in_text_end)
+std::int32_t TextStrToUtf8(char* buf, std::int32_t buf_size, const std::uint16_t* in_text, const std::uint16_t* in_text_end)
 {
     char* buf_out = buf;
     const char* buf_end = buf + buf_size;
     while (buf_out < buf_end - 1 && (!in_text_end || in_text < in_text_end) && *in_text)
     {
-        unsigned int c = (unsigned int)(*in_text++);
+        std::uint32_t c = (std::uint32_t)(*in_text++);
         if (c < 0x80)
             *buf_out++ = (char)c;
         else
-            buf_out += TextCharToUtf8(buf_out, (int)(buf_end - buf_out - 1), c);
+            buf_out += TextCharToUtf8(buf_out, (std::int32_t)(buf_end - buf_out - 1), c);
     }
     *buf_out = 0;
-    return (int)(buf_out - buf);
+    return (std::int32_t)(buf_out - buf);
 }
 
 
@@ -599,13 +599,13 @@ static const char FONT_ATLAS_DEFAULT_TEX_DATA_PIXELS[FONT_ATLAS_DEFAULT_TEX_DATA
     "                                                      -    XX           XX    -                             "
 };
 
-void FontAtlasBuildRender1bppRectFromString(FontAtlas* atlas, int x, int y, int w, int h, const char* in_str, char in_marker_char, unsigned char in_marker_pixel_value)
+void FontAtlasBuildRender1bppRectFromString(FontAtlas* atlas, std::int32_t x, std::int32_t y, std::int32_t w, std::int32_t h, const char* in_str, char in_marker_char, unsigned char in_marker_pixel_value)
 {
     assert(x >= 0 && x + w <= atlas->TexWidth);
     assert(y >= 0 && y + h <= atlas->TexHeight);
     unsigned char* out_pixel = atlas->TexPixelsAlpha8 + x + (y * atlas->TexWidth);
-    for (int off_y = 0; off_y < h; off_y++, out_pixel += atlas->TexWidth, in_str += w) {
-        for (int off_x = 0; off_x < w; off_x++) {
+    for (std::int32_t off_y = 0; off_y < h; off_y++, out_pixel += atlas->TexWidth, in_str += w) {
+        for (std::int32_t off_x = 0; off_x < w; off_x++) {
             out_pixel[off_x] = (in_str[off_x] == in_marker_char) ? in_marker_pixel_value : 0x00;
         }
     }
@@ -615,20 +615,20 @@ void FontAtlasBuildRenderDefaultTexData(FontAtlas* atlas)
     FontAtlasCustomRect* r = atlas->GetCustomRectByIndex(atlas->PackIdMouseCursors);
     assert(r->IsPacked());
 
-    const int w = atlas->TexWidth;
+    const std::int32_t w = atlas->TexWidth;
     if (!(atlas->Flags & FontAtlasFlags_NoMouseCursors))
     {
 
         assert(r->Width == FONT_ATLAS_DEFAULT_TEX_DATA_W * 2 + 1 && r->Height == FONT_ATLAS_DEFAULT_TEX_DATA_H);
-        const int x_for_white = r->X;
-        const int x_for_black = r->X + FONT_ATLAS_DEFAULT_TEX_DATA_W + 1;
+        const std::int32_t x_for_white = r->X;
+        const std::int32_t x_for_black = r->X + FONT_ATLAS_DEFAULT_TEX_DATA_W + 1;
         FontAtlasBuildRender1bppRectFromString(atlas, x_for_white, r->Y, FONT_ATLAS_DEFAULT_TEX_DATA_W, FONT_ATLAS_DEFAULT_TEX_DATA_H, FONT_ATLAS_DEFAULT_TEX_DATA_PIXELS, '.', 0xFF);
         FontAtlasBuildRender1bppRectFromString(atlas, x_for_black, r->Y, FONT_ATLAS_DEFAULT_TEX_DATA_W, FONT_ATLAS_DEFAULT_TEX_DATA_H, FONT_ATLAS_DEFAULT_TEX_DATA_PIXELS, 'X', 0xFF);
     }
     else
     {
         assert(r->Width == 2 && r->Height == 2);
-        const int offset = (int)r->X + (int)r->Y * w;
+        const std::int32_t offset = (std::int32_t)r->X + (std::int32_t)r->Y * w;
         atlas->TexPixelsAlpha8[offset] = atlas->TexPixelsAlpha8[offset + 1] = atlas->TexPixelsAlpha8[offset + w] = atlas->TexPixelsAlpha8[offset + w + 1] = 0xFF;
     }
     atlas->TexUvWhitePixel = ButiEngine::Vector2((r->X + 0.5f) * atlas->TexUvScale.x, (r->Y + 0.5f) * atlas->TexUvScale.y);
@@ -638,7 +638,7 @@ void FontAtlasBuildFinish(FontAtlas* atlas)
 {
     FontAtlasBuildRenderDefaultTexData(atlas);
 
-    for (int i = 0; i < atlas->CustomRects.size(); i++)
+    for (std::int32_t i = 0; i < atlas->CustomRects.size(); i++)
     {
         const FontAtlasCustomRect* r = &atlas->CustomRects[i];
         if (r->font == nullptr || r->GlyphID == 0)
@@ -647,24 +647,24 @@ void FontAtlasBuildFinish(FontAtlas* atlas)
 
         ButiEngine::Vector2 uv0, uv1;
         atlas->CalcCustomRectUV(r, &uv0, &uv1);
-        r->font->AddGlyph(nullptr, (unsigned short)r->GlyphID, r->GlyphOffset.x, r->GlyphOffset.y, r->GlyphOffset.x + r->Width, r->GlyphOffset.y + r->Height, uv0.x, uv0.y, uv1.x, uv1.y, r->GlyphAdvanceX);
+        r->font->AddGlyph(nullptr, (std::uint16_t)r->GlyphID, r->GlyphOffset.x, r->GlyphOffset.y, r->GlyphOffset.x + r->Width, r->GlyphOffset.y + r->Height, uv0.x, uv0.y, uv1.x, uv1.y, r->GlyphAdvanceX);
     }
 
 
-    for (int i = 0; i < atlas->fonts.size(); i++) {
+    for (std::int32_t i = 0; i < atlas->fonts.size(); i++) {
         if (atlas->fonts[i]->DirtyLookupTables) {
             atlas->fonts[i]->BuildLookupTable();
         }
     }
 
     
-    for (int i = 0; i < atlas->fonts.size(); i++)
+    for (std::int32_t i = 0; i < atlas->fonts.size(); i++)
     {
         auto font = atlas->fonts[i];
-        if (font->EllipsisChar != (unsigned short)-1)
+        if (font->EllipsisChar != (std::uint16_t)-1)
             continue;
-        const unsigned short ellipsis_variants[] = { (unsigned short)0x2026, (unsigned short)0x0085 };
-        for (int j = 0; j < sizeof(ellipsis_variants) / sizeof(*ellipsis_variants); j++)
+        const std::uint16_t ellipsis_variants[] = { (std::uint16_t)0x2026, (std::uint16_t)0x0085 };
+        for (std::int32_t j = 0; j < sizeof(ellipsis_variants) / sizeof(*ellipsis_variants); j++)
             if (font->FindGlyphNoFallback(ellipsis_variants[j]) != nullptr) 
             {
                 font->EllipsisChar = ellipsis_variants[j];
@@ -682,13 +682,13 @@ void FontAtlasBuildPackCustomRects(FontAtlas* atlas, void* stbrp_context_opaque)
     std::vector<stbrp_rect> pack_rects;
     pack_rects.resize(user_rects.size());
 
-    for (int i = 0; i < user_rects.size(); i++)
+    for (std::int32_t i = 0; i < user_rects.size(); i++)
     {
         pack_rects[i].w = user_rects[i].Width;
         pack_rects[i].h = user_rects[i].Height;
     }
     stbrp_pack_rects(pack_context, &pack_rects[0], pack_rects.size());
-    for (int i = 0; i < pack_rects.size(); i++) {
+    for (std::int32_t i = 0; i < pack_rects.size(); i++) {
         if (pack_rects[i].was_packed)
         {
             user_rects[i].X = pack_rects[i].x;
@@ -710,7 +710,7 @@ const char* FindRenderedTextEnd(const char* text, const char* text_end)
     return text_display_end;
 }
 
-void CreateFontFromFile(FontAtlas* arg_p_atlas,  int* arg_output_width,  int* arg_output_height, unsigned char** arg_output_atlasTextureData,ButiFont::IFontInformation** arg_output_fontInfo)
+void CreateFontFromFile(FontAtlas* arg_p_atlas,  std::int32_t* arg_output_width,  std::int32_t* arg_output_height, unsigned char** arg_output_atlasTextureData,ButiFont::IFontInformation** arg_output_fontInfo)
 {
 
     FontAtlasBuildInit(arg_p_atlas);
@@ -729,7 +729,7 @@ void CreateFontFromFile(FontAtlas* arg_p_atlas,  int* arg_output_width,  int* ar
     dst_tmp_array.resize(arg_p_atlas->fonts.size());
 
 
-    for (int src_i = 0; src_i < arg_p_atlas->configs.size(); src_i++)
+    for (std::int32_t src_i = 0; src_i < arg_p_atlas->configs.size(); src_i++)
     {
         FontBuildSrcData& src_tmp = src_tmp_array[src_i];
         FontLoadData& cfg = *arg_p_atlas->configs[src_i];
@@ -737,7 +737,7 @@ void CreateFontFromFile(FontAtlas* arg_p_atlas,  int* arg_output_width,  int* ar
 
 
         src_tmp.DstIndex = -1;
-        for (int output_i = 0; output_i < arg_p_atlas->fonts.size() && src_tmp.DstIndex == -1; output_i++) {
+        for (std::int32_t output_i = 0; output_i < arg_p_atlas->fonts.size() && src_tmp.DstIndex == -1; output_i++) {
             if (cfg.dst_font == arg_p_atlas->fonts[output_i]) {
                 src_tmp.DstIndex = output_i;
             }
@@ -748,7 +748,7 @@ void CreateFontFromFile(FontAtlas* arg_p_atlas,  int* arg_output_width,  int* ar
         }
 
 
-        const int font_offset = stbtt_GetFontOffsetForIndex((unsigned char*)cfg.FontData, cfg.FontNo);
+        const std::int32_t font_offset = stbtt_GetFontOffsetForIndex((unsigned char*)cfg.FontData, cfg.FontNo);
         assert(font_offset >= 0);
         if (!stbtt_InitFont(&src_tmp.FontInfo, (unsigned char*)cfg.FontData, font_offset)) {
 
@@ -756,14 +756,14 @@ void CreateFontFromFile(FontAtlas* arg_p_atlas,  int* arg_output_width,  int* ar
         }
         FontBuildDstData& dst_tmp = dst_tmp_array[src_tmp.DstIndex];
         src_tmp.SrcRanges = cfg.GlyphRanges ? cfg.GlyphRanges : arg_p_atlas->GetGlyphRangesDefault();
-        for (const unsigned short* src_range = src_tmp.SrcRanges; src_range[0] && src_range[1]; src_range += 2)
-            src_tmp.GlyphsHighest = max(src_tmp.GlyphsHighest, (int)src_range[1]);
+        for (const std::uint16_t* src_range = src_tmp.SrcRanges; src_range[0] && src_range[1]; src_range += 2)
+            src_tmp.GlyphsHighest = max(src_tmp.GlyphsHighest, (std::int32_t)src_range[1]);
         dst_tmp.SrcCount++;
         dst_tmp.GlyphsHighest = max(dst_tmp.GlyphsHighest, src_tmp.GlyphsHighest);
     }
 
-    int total_glyphs_count = 0;
-    for (int src_i = 0; src_i < src_tmp_array.size(); src_i++)
+    std::int32_t total_glyphs_count = 0;
+    for (std::int32_t src_i = 0; src_i < src_tmp_array.size(); src_i++)
     {
         FontBuildSrcData& src_tmp = src_tmp_array[src_i];
         FontBuildDstData& dst_tmp = dst_tmp_array[src_tmp.DstIndex];
@@ -771,8 +771,8 @@ void CreateFontFromFile(FontAtlas* arg_p_atlas,  int* arg_output_width,  int* ar
         if (dst_tmp.GlyphsSet.Storage.empty())
             dst_tmp.GlyphsSet.Create(dst_tmp.GlyphsHighest + 1);
 
-        for (const unsigned short* src_range = src_tmp.SrcRanges; src_range[0] && src_range[1]; src_range += 2) {
-            for (unsigned int codepoint = src_range[0]; codepoint <= src_range[1]; codepoint++)
+        for (const std::uint16_t* src_range = src_tmp.SrcRanges; src_range[0] && src_range[1]; src_range += 2) {
+            for (std::uint32_t codepoint = src_range[0]; codepoint <= src_range[1]; codepoint++)
             {
                 if (dst_tmp.GlyphsSet.TestBit(codepoint))    
                     continue;
@@ -790,7 +790,7 @@ void CreateFontFromFile(FontAtlas* arg_p_atlas,  int* arg_output_width,  int* ar
     }
 
 
-    for (int src_i = 0; src_i < src_tmp_array.size(); src_i++)
+    for (std::int32_t src_i = 0; src_i < src_tmp_array.size(); src_i++)
     {
         FontBuildSrcData& src_tmp = src_tmp_array[src_i];
         src_tmp.GlyphsList.reserve(src_tmp.GlyphsCount);
@@ -798,7 +798,7 @@ void CreateFontFromFile(FontAtlas* arg_p_atlas,  int* arg_output_width,  int* ar
         src_tmp.GlyphsSet.Clear();
         assert(src_tmp.GlyphsList.size() == src_tmp.GlyphsCount);
     }
-    for (int dst_i = 0; dst_i < dst_tmp_array.size(); dst_i++) {
+    for (std::int32_t dst_i = 0; dst_i < dst_tmp_array.size(); dst_i++) {
         dst_tmp_array[dst_i].GlyphsSet.Clear();
     }
     dst_tmp_array.clear();
@@ -810,10 +810,10 @@ void CreateFontFromFile(FontAtlas* arg_p_atlas,  int* arg_output_width,  int* ar
     buf_packedchars.resize(total_glyphs_count);
 
 
-    int total_surface = 0;
-    int buf_rects_out_n = 0;
-    int buf_packedchars_out_n = 0;
-    for (int src_i = 0; src_i < src_tmp_array.size(); src_i++)
+    std::int32_t total_surface = 0;
+    std::int32_t buf_rects_out_n = 0;
+    std::int32_t buf_packedchars_out_n = 0;
+    for (std::int32_t src_i = 0; src_i < src_tmp_array.size(); src_i++)
     {
         FontBuildSrcData& src_tmp = src_tmp_array[src_i];
         if (src_tmp.GlyphsCount == 0)
@@ -835,11 +835,11 @@ void CreateFontFromFile(FontAtlas* arg_p_atlas,  int* arg_output_width,  int* ar
 
 
         const float scale = (cfg.SizePixels > 0) ? stbtt_ScaleForPixelHeight(&src_tmp.FontInfo, cfg.SizePixels) : stbtt_ScaleForMappingEmToPixels(&src_tmp.FontInfo, -cfg.SizePixels);
-        const int padding = arg_p_atlas->TexGlyphPadding;
-        for (int glyph_i = 0; glyph_i < src_tmp.GlyphsList.size(); glyph_i++)
+        const std::int32_t padding = arg_p_atlas->TexGlyphPadding;
+        for (std::int32_t glyph_i = 0; glyph_i < src_tmp.GlyphsList.size(); glyph_i++)
         {
-            int x0, y0, x1, y1;
-            const int glyph_index_in_font = stbtt_FindGlyphIndex(&src_tmp.FontInfo, src_tmp.GlyphsList[glyph_i]);
+            std::int32_t x0, y0, x1, y1;
+            const std::int32_t glyph_index_in_font = stbtt_FindGlyphIndex(&src_tmp.FontInfo, src_tmp.GlyphsList[glyph_i]);
             assert(glyph_index_in_font != 0);
             stbtt_GetGlyphBitmapBoxSubpixel(&src_tmp.FontInfo, glyph_index_in_font, scale * cfg.OversampleH, scale * cfg.OversampleV, 0, 0, &x0, &y0, &x1, &y1);
             src_tmp.Rects[glyph_i].w = (stbrp_coord)(x1 - x0 + padding + cfg.OversampleH - 1);
@@ -847,7 +847,7 @@ void CreateFontFromFile(FontAtlas* arg_p_atlas,  int* arg_output_width,  int* ar
             total_surface += src_tmp.Rects[glyph_i].w * src_tmp.Rects[glyph_i].h;
         }
     }
-    const int surface_sqrt = (int)std::sqrt((float)total_surface) + 1;
+    const std::int32_t surface_sqrt = (std::int32_t)std::sqrt((float)total_surface) + 1;
     arg_p_atlas->TexHeight = 0;
     if (arg_p_atlas->TexDesiredWidth > 0)
         arg_p_atlas->TexWidth = arg_p_atlas->TexDesiredWidth;
@@ -855,13 +855,13 @@ void CreateFontFromFile(FontAtlas* arg_p_atlas,  int* arg_output_width,  int* ar
         arg_p_atlas->TexWidth = (surface_sqrt >= 4096 * 0.7f) ? 4096 : (surface_sqrt >= 2048 * 0.7f) ? 2048 : (surface_sqrt >= 1024 * 0.7f) ? 1024 : 512;
 
 
-    const int TEX_HEIGHT_MAX = 1024 * 32;
+    const std::int32_t TEX_HEIGHT_MAX = 1024 * 32;
     stbtt_pack_context spc = {};
     stbtt_PackBegin(&spc, nullptr, arg_p_atlas->TexWidth, TEX_HEIGHT_MAX, 0, arg_p_atlas->TexGlyphPadding, nullptr);
     FontAtlasBuildPackCustomRects(arg_p_atlas, spc.pack_info);
 
 
-    for (int src_i = 0; src_i < src_tmp_array.size(); src_i++)
+    for (std::int32_t src_i = 0; src_i < src_tmp_array.size(); src_i++)
     {
         FontBuildSrcData& src_tmp = src_tmp_array[src_i];
         if (src_tmp.GlyphsCount == 0)
@@ -870,7 +870,7 @@ void CreateFontFromFile(FontAtlas* arg_p_atlas,  int* arg_output_width,  int* ar
         stbrp_pack_rects((stbrp_context*)spc.pack_info, src_tmp.Rects, src_tmp.GlyphsCount);
 
 
-        for (int glyph_i = 0; glyph_i < src_tmp.GlyphsCount; glyph_i++)
+        for (std::int32_t glyph_i = 0; glyph_i < src_tmp.GlyphsCount; glyph_i++)
             if (src_tmp.Rects[glyph_i].was_packed)
                 arg_p_atlas->TexHeight = max(arg_p_atlas->TexHeight, src_tmp.Rects[glyph_i].y + src_tmp.Rects[glyph_i].h);
     }
@@ -884,7 +884,7 @@ void CreateFontFromFile(FontAtlas* arg_p_atlas,  int* arg_output_width,  int* ar
     spc.height = arg_p_atlas->TexHeight;
 
 
-    for (int src_i = 0; src_i < src_tmp_array.size(); src_i++)
+    for (std::int32_t src_i = 0; src_i < src_tmp_array.size(); src_i++)
     {
         FontLoadData& cfg = *arg_p_atlas->configs[src_i];
         FontBuildSrcData& src_tmp = src_tmp_array[src_i];
@@ -898,7 +898,7 @@ void CreateFontFromFile(FontAtlas* arg_p_atlas,  int* arg_output_width,  int* ar
             unsigned char multiply_table[256];
             FontAtlasBuildMultiplyCalcLookupTable(multiply_table, cfg.RasterizerMultiply);
             stbrp_rect* r = &src_tmp.Rects[0];
-            for (int glyph_i = 0; glyph_i < src_tmp.GlyphsCount; glyph_i++, r++) {
+            for (std::int32_t glyph_i = 0; glyph_i < src_tmp.GlyphsCount; glyph_i++, r++) {
                 if (r->was_packed)
                     FontAtlasBuildMultiplyRectAlpha8(multiply_table, arg_p_atlas->TexPixelsAlpha8, r->x, r->y, r->w, r->h, arg_p_atlas->TexWidth * 1);
             }
@@ -911,7 +911,7 @@ void CreateFontFromFile(FontAtlas* arg_p_atlas,  int* arg_output_width,  int* ar
     stbtt_PackEnd(&spc);
     buf_rects.clear();
 
-    for (int src_i = 0; src_i < src_tmp_array.size(); src_i++)
+    for (std::int32_t src_i = 0; src_i < src_tmp_array.size(); src_i++)
     {
         FontBuildSrcData& src_tmp = src_tmp_array[src_i];
         if (src_tmp.GlyphsCount == 0)
@@ -920,7 +920,7 @@ void CreateFontFromFile(FontAtlas* arg_p_atlas,  int* arg_output_width,  int* ar
         auto dst_font = cfg.dst_font;
 
         const float font_scale = stbtt_ScaleForPixelHeight(&src_tmp.FontInfo, cfg.SizePixels);
-        int unscaled_ascent, unscaled_descent, unscaled_line_gap;
+        std::int32_t unscaled_ascent, unscaled_descent, unscaled_line_gap;
         stbtt_GetFontVMetrics(&src_tmp.FontInfo, &unscaled_ascent, &unscaled_descent, &unscaled_line_gap);
 
         const float ascent = floor(unscaled_ascent * font_scale + ((unscaled_ascent > 0.0f) ? +1 : -1));
@@ -929,15 +929,15 @@ void CreateFontFromFile(FontAtlas* arg_p_atlas,  int* arg_output_width,  int* ar
         const float font_off_x = cfg.GlyphOffset.x;
         const float font_off_y = cfg.GlyphOffset.y + round(dst_font->Ascent);
 
-        for (int glyph_i = 0; glyph_i < src_tmp.GlyphsCount; glyph_i++)
+        for (std::int32_t glyph_i = 0; glyph_i < src_tmp.GlyphsCount; glyph_i++)
         {
 
-            const int codepoint = src_tmp.GlyphsList[glyph_i];
+            const std::int32_t codepoint = src_tmp.GlyphsList[glyph_i];
             const stbtt_packedchar& pc = src_tmp.PackedChars[glyph_i];
             stbtt_aligned_quad q;
             float unused_x = 0.0f, unused_y = 0.0f;
             stbtt_GetPackedQuad(src_tmp.PackedChars, arg_p_atlas->TexWidth, arg_p_atlas->TexHeight, glyph_i, &unused_x, &unused_y, &q, 0);
-            dst_font->AddGlyph(&cfg, (unsigned short)codepoint, q.x0 + font_off_x, q.y0 + font_off_y, q.x1 + font_off_x, q.y1 + font_off_y, q.s0, q.t0, q.s1, q.t1, pc.xadvance);
+            dst_font->AddGlyph(&cfg, (std::uint16_t)codepoint, q.x0 + font_off_x, q.y0 + font_off_y, q.x1 + font_off_x, q.y1 + font_off_y, q.s0, q.t0, q.s1, q.t1, pc.xadvance);
         }
     }
 
@@ -1002,7 +1002,7 @@ void FontAtlas::PushFont(std::shared_ptr<FontLoadData> arg_shp_fontload)
         new_font_cfg->FontDataOwnedByAtlas = true;
     }
 
-    if (new_font_cfg->dst_font->EllipsisChar == (unsigned short)-1)
+    if (new_font_cfg->dst_font->EllipsisChar == (std::uint16_t)-1)
         new_font_cfg->dst_font->EllipsisChar = arg_shp_fontload->EllipsisChar;
 
     ClearTexData();
@@ -1012,14 +1012,14 @@ void FontAtlas::PushFont(std::shared_ptr<FontLoadData> arg_shp_fontload)
 void FontAtlas::ClearInputData()
 {
     assert(!Locked );
-    for (int i = 0; i < configs.size(); i++)
+    for (std::int32_t i = 0; i < configs.size(); i++)
         if (configs[i]->FontData && configs[i]->FontDataOwnedByAtlas)
         {
             free(configs[i]->FontData);
             configs[i]->FontData = nullptr;
         }
 
-    for (int i = 0; i < fonts.size(); i++) {
+    for (std::int32_t i = 0; i < fonts.size(); i++) {
 
         fonts[i]->ConfigData = nullptr;
         fonts[i]->ConfigDataCount = 0;
@@ -1048,7 +1048,7 @@ void FontAtlas::Clear()
     ClearTexData();
     ClearFonts();
 }
-void FontAtlas::GetTexDataAsAlpha8(unsigned char** out_pixels, int* out_width, int* out_height, int* out_bytes_per_pixel)
+void FontAtlas::GetTexDataAsAlpha8(unsigned char** out_pixels, std::int32_t* out_width, std::int32_t* out_height, std::int32_t* out_bytes_per_pixel)
 {
     if (TexPixelsAlpha8 == nullptr)
     {
@@ -1063,9 +1063,9 @@ void FontAtlas::GetTexDataAsAlpha8(unsigned char** out_pixels, int* out_width, i
 }
 
 
-const unsigned short* FontAtlas::GetGlyphRangesDefault()
+const std::uint16_t* FontAtlas::GetGlyphRangesDefault()
 {
-    static const unsigned short ranges[] =
+    static const std::uint16_t ranges[] =
     {
         0x0020, 0x00FF, 
         0,
@@ -1074,13 +1074,13 @@ const unsigned short* FontAtlas::GetGlyphRangesDefault()
 }
 
 
-int FontAtlas::AddCustomRectRegular(int width, int height)
+std::int32_t FontAtlas::AddCustomRectRegular(std::int32_t width, std::int32_t height)
 {
     assert(width > 0 && width <= 0xFFFF);
     assert(height > 0 && height <= 0xFFFF);
     FontAtlasCustomRect r;
-    r.Width = (unsigned unsigned short)width;
-    r.Height = (unsigned unsigned short)height;
+    r.Width = (std::uint16_t)width;
+    r.Height = (std::uint16_t)height;
     CustomRects.push_back(r);
     return CustomRects.size() - 1; 
 }
@@ -1093,7 +1093,7 @@ void FontAtlas::CalcCustomRectUV(const FontAtlasCustomRect* rect, ButiEngine::Ve
     *out_uv_max = ButiEngine::Vector2((float)(rect->X + rect->Width) * TexUvScale.x, (float)(rect->Y + rect->Height) * TexUvScale.y);
 }
 
-bool FontAtlas::GetMouseCursorTexData(const int cursor_type, ButiEngine::Vector2* out_offset, ButiEngine::Vector2* out_size, ButiEngine::Vector2 out_uv_border[2], ButiEngine::Vector2 out_uv_fill[2])
+bool FontAtlas::GetMouseCursorTexData(const std::int32_t cursor_type, ButiEngine::Vector2* out_offset, ButiEngine::Vector2* out_size, ButiEngine::Vector2 out_uv_border[2], ButiEngine::Vector2 out_uv_fill[2])
 {
     if (cursor_type <= GuiMouseCursor_None || cursor_type >= GuiMouseCursor_COUNT)
         return false;
@@ -1118,8 +1118,8 @@ Font::Font()
 {
     FontSize = 0.0f;
     FallbackAdvanceX = 0.0f;
-    FallbackChar = (unsigned short)'?';
-    EllipsisChar = (unsigned short)-1;
+    FallbackChar = (std::uint16_t)'?';
+    EllipsisChar = (std::uint16_t)-1;
     FallbackGlyph = nullptr;
     ContainerAtlas = nullptr;
     ConfigData = nullptr;
@@ -1136,22 +1136,22 @@ Font::~Font()
     ClearOutputData();
 }
 
-const ButiFont::FontGlyph* Font::FindGlyph(unsigned short c) const
+const ButiFont::FontGlyph* Font::FindGlyph(std::uint16_t c) const
 {
     if (c >= (size_t)IndexLookup.size())
         return FallbackGlyph;
-    const unsigned short i = IndexLookup[c];
-    if (i == (unsigned short)-1)
+    const std::uint16_t i = IndexLookup[c];
+    if (i == (std::uint16_t)-1)
         return FallbackGlyph;
     return &Glyphs[i];
 }
 
-const ButiFont::FontGlyph* Font::FindGlyphNoFallback(unsigned short c) const
+const ButiFont::FontGlyph* Font::FindGlyphNoFallback(std::uint16_t c) const
 {
     if (c >= (size_t)IndexLookup.size())
         return nullptr;
-    const unsigned short i = IndexLookup[c];
-    if (i == (unsigned short)-1)
+    const std::uint16_t i = IndexLookup[c];
+    if (i == (std::uint16_t)-1)
         return nullptr;
     return &Glyphs[i];
 }
@@ -1205,7 +1205,7 @@ ButiEngine::Vector2 Font::CalcTextSizeA(float size, float max_width, float wrap_
 
         // Decode and advance source
         const char* prev_s = s;
-        unsigned int c = (unsigned int)*s;
+        std::uint32_t c = (std::uint32_t)*s;
         if (c < 0x80)
         {
             s += 1;
@@ -1230,7 +1230,7 @@ ButiEngine::Vector2 Font::CalcTextSizeA(float size, float max_width, float wrap_
                 continue;
         }
 
-        const float char_width = ((int)c < IndexAdvanceX.size() ? IndexAdvanceX[c] : FallbackAdvanceX) * scale;
+        const float char_width = ((std::int32_t)c < IndexAdvanceX.size() ? IndexAdvanceX[c] : FallbackAdvanceX) * scale;
         if (line_width + char_width >= max_width)
         {
             s = prev_s;
@@ -1266,7 +1266,7 @@ const char* Font::CalcWordWrapPositionA(float scale, const char* text, const cha
     const char* s = text;
     while (s < text_end)
     {
-        unsigned int c = (unsigned int)*s;
+        std::uint32_t c = (std::uint32_t)*s;
         const char* next_s;
         if (c < 0x80)
             next_s = s + 1;
@@ -1291,7 +1291,7 @@ const char* Font::CalcWordWrapPositionA(float scale, const char* text, const cha
             }
         }
 
-        const float char_width = ((int)c < IndexAdvanceX.size() ? IndexAdvanceX[c] : FallbackAdvanceX);
+        const float char_width = ((std::int32_t)c < IndexAdvanceX.size() ? IndexAdvanceX[c] : FallbackAdvanceX);
         if (CharIsBlankW(c))
         {
             if (inside_word)
@@ -1336,9 +1336,9 @@ const char* Font::CalcWordWrapPositionA(float scale, const char* text, const cha
 
 void Font::BuildLookupTable()
 {
-    int max_codepoint = 0;
-    for (int i = 0; i != Glyphs.size(); i++)
-        max_codepoint = max(max_codepoint, (int)Glyphs[i].Codepoint);
+    std::int32_t max_codepoint = 0;
+    for (std::int32_t i = 0; i != Glyphs.size(); i++)
+        max_codepoint = max(max_codepoint, (std::int32_t)Glyphs[i].Codepoint);
 
 
     IndexAdvanceX.clear();
@@ -1346,34 +1346,34 @@ void Font::BuildLookupTable()
     DirtyLookupTables = false;
     memset(Used4kPagesMap, 0, sizeof(Used4kPagesMap));
     GrowIndex(max_codepoint + 1);
-    for (int i = 0; i < Glyphs.size(); i++)
+    for (std::int32_t i = 0; i < Glyphs.size(); i++)
     {
-        int codepoint = (int)Glyphs[i].Codepoint;
+        std::int32_t codepoint = (std::int32_t)Glyphs[i].Codepoint;
         IndexAdvanceX[codepoint] = Glyphs[i].AdvanceX;
-        IndexLookup[codepoint] = (unsigned short)i;
+        IndexLookup[codepoint] = (std::uint16_t)i;
 
-        const int page_n = codepoint / 4096;
+        const std::int32_t page_n = codepoint / 4096;
         Used4kPagesMap[page_n >> 3] |= 1 << (page_n & 7);
     }
 
-    if (FindGlyph((unsigned short)' '))
+    if (FindGlyph((std::uint16_t)' '))
     {
         if (Glyphs.back().Codepoint != '\t')
             Glyphs.resize(Glyphs.size() + 1);
         ButiFont::FontGlyph& tab_glyph = Glyphs.back();
-        tab_glyph = *FindGlyph((unsigned short)' ');
+        tab_glyph = *FindGlyph((std::uint16_t)' ');
         tab_glyph.Codepoint = '\t';
         tab_glyph.AdvanceX *= TABSIZE;
-        IndexAdvanceX[(int)tab_glyph.Codepoint] = (float)tab_glyph.AdvanceX;
-        IndexLookup[(int)tab_glyph.Codepoint] = (unsigned short)(Glyphs.size() - 1);
+        IndexAdvanceX[(std::int32_t)tab_glyph.Codepoint] = (float)tab_glyph.AdvanceX;
+        IndexLookup[(std::int32_t)tab_glyph.Codepoint] = (std::uint16_t)(Glyphs.size() - 1);
     }
 
-    SetGlyphVisible((unsigned short)' ', false);
-    SetGlyphVisible((unsigned short)'\t', false);
+    SetGlyphVisible((std::uint16_t)' ', false);
+    SetGlyphVisible((std::uint16_t)'\t', false);
 
     FallbackGlyph = FindGlyphNoFallback(FallbackChar);
     FallbackAdvanceX = FallbackGlyph ? FallbackGlyph->AdvanceX : 0.0f;
-    for (int i = 0; i < max_codepoint + 1; i++) {
+    for (std::int32_t i = 0; i < max_codepoint + 1; i++) {
         if (IndexAdvanceX[i] < 0.0f) {
             IndexAdvanceX[i] = FallbackAdvanceX;
         }
@@ -1395,16 +1395,16 @@ void Font::ClearOutputData()
     MetricsTotalSurface = 0;
 }
 
-void Font::GrowIndex(int new_size)
+void Font::GrowIndex(std::int32_t new_size)
 {
     assert(IndexAdvanceX.size() == IndexLookup.size());
     if (new_size <= IndexLookup.size())
         return;
     IndexAdvanceX.resize(new_size, -1.0f);
-    IndexLookup.resize(new_size, (unsigned short)-1);
+    IndexLookup.resize(new_size, (std::uint16_t)-1);
 }
 
-void Font::AddGlyph(const FontLoadData* src_cfg, unsigned short codepoint, float x0, float y0, float x1, float y1, float u0, float v0, float u1, float v1, float advance_x)
+void Font::AddGlyph(const FontLoadData* src_cfg, std::uint16_t codepoint, float x0, float y0, float x1, float y1, float u0, float v0, float u1, float v1, float advance_x)
 {
     if (src_cfg != nullptr)
     {
@@ -1429,7 +1429,7 @@ void Font::AddGlyph(const FontLoadData* src_cfg, unsigned short codepoint, float
 
     Glyphs.resize(Glyphs.size() + 1);
     ButiFont::FontGlyph& glyph = Glyphs.back();
-    glyph.Codepoint = (unsigned int)codepoint;
+    glyph.Codepoint = (std::uint32_t)codepoint;
     glyph.Visible = (x0 != x1) && (y0 != y1);
     glyph.X0 = x0;
     glyph.Y0 = y0;
@@ -1444,41 +1444,41 @@ void Font::AddGlyph(const FontLoadData* src_cfg, unsigned short codepoint, float
 
     float pad = ContainerAtlas->TexGlyphPadding + 0.99f;
     DirtyLookupTables = true;
-    MetricsTotalSurface += (int)((glyph.U1 - glyph.U0) * ContainerAtlas->TexWidth + pad) * (int)((glyph.V1 - glyph.V0) * ContainerAtlas->TexHeight + pad);
+    MetricsTotalSurface += (std::int32_t)((glyph.U1 - glyph.U0) * ContainerAtlas->TexWidth + pad) * (std::int32_t)((glyph.V1 - glyph.V0) * ContainerAtlas->TexHeight + pad);
 }
 
-void Font::AddRemapChar(unsigned short dst, unsigned short src, bool overwrite_dst)
+void Font::AddRemapChar(std::uint16_t dst, std::uint16_t src, bool overwrite_dst)
 {
     assert(IndexLookup.size() > 0);
-    unsigned int index_size = (unsigned int)IndexLookup.size();
+    std::uint32_t index_size = (std::uint32_t)IndexLookup.size();
 
-    if (dst < index_size && IndexLookup[dst] == (unsigned short)-1 && !overwrite_dst) // 'dst' already exists
+    if (dst < index_size && IndexLookup[dst] == (std::uint16_t)-1 && !overwrite_dst) // 'dst' already exists
         return;
     if (src >= index_size && dst >= index_size) 
         return;
 
     GrowIndex(dst + 1);
-    IndexLookup[dst] = (src < index_size) ? IndexLookup[src] : (unsigned short)-1;
+    IndexLookup[dst] = (src < index_size) ? IndexLookup[src] : (std::uint16_t)-1;
     IndexAdvanceX[dst] = (src < index_size) ? IndexAdvanceX[src] : 1.0f;
 }
 
-void Font::SetGlyphVisible(unsigned short c, bool visible)
+void Font::SetGlyphVisible(std::uint16_t c, bool visible)
 {
-    if (ButiFont::FontGlyph* glyph = (ButiFont::FontGlyph*)(void*)FindGlyph((unsigned short)c))
+    if (ButiFont::FontGlyph* glyph = (ButiFont::FontGlyph*)(void*)FindGlyph((std::uint16_t)c))
         glyph->Visible = visible ? 1 : 0;
 }
 
-void Font::SetFallbackChar(unsigned short c)
+void Font::SetFallbackChar(std::uint16_t c)
 {
     FallbackChar = c;
     BuildLookupTable();
 }
 
-bool Font::IsGlyphRangeUnused(unsigned int c_begin, unsigned int c_last)
+bool Font::IsGlyphRangeUnused(std::uint32_t c_begin, std::uint32_t c_last)
 {
-    unsigned int page_begin = (c_begin / 4096);
-    unsigned int page_last = (c_last / 4096);
-    for (unsigned int page_n = page_begin; page_n <= page_last; page_n++) {
+    std::uint32_t page_begin = (c_begin / 4096);
+    std::uint32_t page_last = (c_last / 4096);
+    for (std::uint32_t page_n = page_begin; page_n <= page_last; page_n++) {
         if ((page_n >> 3) < sizeof(Used4kPagesMap))
         {
             if (Used4kPagesMap[page_n >> 3] & (1 << (page_n & 7)))
@@ -1492,40 +1492,40 @@ void FontGlyphRangesBuilder::AddText(const char* text, const char* text_end)
 {
     while (text_end ? (text < text_end) : *text)
     {
-        unsigned int c = 0;
-        int c_len = TextCharFromUtf8(&c, text, text_end);
+        std::uint32_t c = 0;
+        std::int32_t c_len = TextCharFromUtf8(&c, text, text_end);
         text += c_len;
         if (c_len == 0)
             break;
-        AddChar((unsigned short)c);
+        AddChar((std::uint16_t)c);
     }
 }
 
-void FontGlyphRangesBuilder::AddRanges(const unsigned short* ranges)
+void FontGlyphRangesBuilder::AddRanges(const std::uint16_t* ranges)
 {
     for (; ranges[0]; ranges += 2) {
-        for (unsigned short c = ranges[0]; c <= ranges[1]; c++) {
+        for (std::uint16_t c = ranges[0]; c <= ranges[1]; c++) {
             AddChar(c);
         }
     }
 }
 
-void FontGlyphRangesBuilder::BuildRanges(std::vector<unsigned short>* out_ranges)
+void FontGlyphRangesBuilder::BuildRanges(std::vector<std::uint16_t>* out_ranges)
 {
-    const int max_codepoint = UNICODE_CODEPOINT_MAX;
-    for (int n = 0; n <= max_codepoint; n++) {
+    const std::int32_t max_codepoint = UNICODE_CODEPOINT_MAX;
+    for (std::int32_t n = 0; n <= max_codepoint; n++) {
         if (GetBit(n))
         {
-            out_ranges->push_back((unsigned short)n);
+            out_ranges->push_back((std::uint16_t)n);
             while (n < max_codepoint && GetBit(n + 1))
                 n++;
-            out_ranges->push_back((unsigned short)n);
+            out_ranges->push_back((std::uint16_t)n);
         }
     }
     out_ranges->push_back(0);
 }
 
-const ButiFont::FontGlyph** FontInformation::FindGlyphs_utf8(const char* arg_srcStr, int& arg_ref_glyphSize)const
+const ButiFont::FontGlyph** FontInformation::FindGlyphs_utf8(const char* arg_srcStr, std::int32_t& arg_ref_glyphSize)const
 {
 
 
@@ -1535,7 +1535,7 @@ const ButiFont::FontGlyph** FontInformation::FindGlyphs_utf8(const char* arg_src
     while (s < end)
     {
 
-        unsigned int c = *s;
+        std::uint32_t c = *s;
 
 
 
@@ -1567,8 +1567,8 @@ const ButiFont::FontGlyph** FontInformation::FindGlyphs_utf8(const char* arg_src
 
         if (c >= (size_t)vec_indexLookup.size())
             vec_temp.push_back(p_fallback);
-        const unsigned short i = vec_indexLookup[c];
-        if (i == (unsigned short)-1)
+        const std::uint16_t i = vec_indexLookup[c];
+        if (i == (std::uint16_t)-1)
             vec_temp.push_back(p_fallback);
 
         vec_temp.push_back(&vec_glyphs[i]);
@@ -1580,7 +1580,7 @@ const ButiFont::FontGlyph** FontInformation::FindGlyphs_utf8(const char* arg_src
     return output;
 }
 
-void ButiFont::LoadTTF(const char* arg_filePath, const int size, ButiFont::FontLanguage arg_lang,  int* arg_output_width,  int* arg_output_height, unsigned char** arg_output_atlasTextureData, IFontInformation** arg_output_fontInfo)
+void ButiFont::LoadTTF(const char* arg_filePath, const std::int32_t size, ButiFont::FontLanguage arg_lang,  std::int32_t* arg_output_width,  std::int32_t* arg_output_height, unsigned char** arg_output_atlasTextureData, IFontInformation** arg_output_fontInfo)
 {
 
     std::ifstream input= std::ifstream(arg_filePath, std::ios::in | std::ios::binary);

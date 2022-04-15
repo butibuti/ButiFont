@@ -150,7 +150,7 @@
       <EnableUAC>false</EnableUAC>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y /d "..\..\dll\Release\" "..\..\..\ButiEngine_User\"</Command>
+      <Command>xcopy /y /d "$(SolutionDir)Libs\dll\$(Configuration)" "$(SolutionDir)output\UserSample\$(Configuration)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -174,7 +174,7 @@
       <EnableUAC>false</EnableUAC>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y /d "..\..\dll\Release\" "..\..\..\ButiEngine_User\"</Command>
+      <Command>xcopy /y /d "$(SolutionDir)Libs\dll\$(Configuration)" "$(SolutionDir)output\UserSample\$(Configuration)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
