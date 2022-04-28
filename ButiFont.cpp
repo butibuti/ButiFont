@@ -292,7 +292,7 @@ struct FontAtlas
     FontAtlas();
     ~FontAtlas();
 
-    void PushFont(std::shared_ptr< FontLoadData> arg_shp_fontload);
+    void PushFont(std::shared_ptr< FontLoadData> arg_vlp_fontload);
 
     void              ClearInputData();
     void              ClearTexData();
@@ -979,10 +979,10 @@ FontAtlas::~FontAtlas()
     Clear();
 }
 
-void FontAtlas::PushFont(std::shared_ptr<FontLoadData> arg_shp_fontload)
+void FontAtlas::PushFont(std::shared_ptr<FontLoadData> arg_vlp_fontload)
 {
 
-    if (!arg_shp_fontload->MergeMode) {
+    if (!arg_vlp_fontload->MergeMode) {
         fonts.push_back(std::make_shared< Font>());
         fonts.back()->ContainerAtlas = this;
     }
@@ -990,7 +990,7 @@ void FontAtlas::PushFont(std::shared_ptr<FontLoadData> arg_shp_fontload)
         assert(!fonts.empty());
 
     }
-    configs.push_back(arg_shp_fontload);
+    configs.push_back(arg_vlp_fontload);
     auto new_font_cfg = configs.back();
     if (new_font_cfg->dst_font == nullptr) {
         new_font_cfg->dst_font = fonts.back();
@@ -998,12 +998,12 @@ void FontAtlas::PushFont(std::shared_ptr<FontLoadData> arg_shp_fontload)
 
     if (!new_font_cfg->FontDataOwnedByAtlas)
     {
-        new_font_cfg->FontData = arg_shp_fontload->FontData;
+        new_font_cfg->FontData = arg_vlp_fontload->FontData;
         new_font_cfg->FontDataOwnedByAtlas = true;
     }
 
     if (new_font_cfg->dst_font->EllipsisChar == (std::uint16_t)-1)
-        new_font_cfg->dst_font->EllipsisChar = arg_shp_fontload->EllipsisChar;
+        new_font_cfg->dst_font->EllipsisChar = arg_vlp_fontload->EllipsisChar;
 
     ClearTexData();
 
