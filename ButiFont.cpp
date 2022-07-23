@@ -1580,26 +1580,17 @@ const ButiFont::FontGlyph** FontInformation::FindGlyphs_utf8(const char* arg_src
     return output;
 }
 
-void ButiFont::LoadTTF(const char* arg_filePath, const std::int32_t size, ButiFont::FontLanguage arg_lang,  std::int32_t* arg_output_width,  std::int32_t* arg_output_height, unsigned char** arg_output_atlasTextureData, IFontInformation** arg_output_fontInfo)
+void ButiFont::LoadTTFFile(const char* arg_filePath, const std::int32_t size, ButiFont::FontLanguage arg_lang,  std::int32_t* arg_output_width,  std::int32_t* arg_output_height, unsigned char** arg_output_atlasTextureData, IFontInformation** arg_output_fontInfo)
 {
-
     std::ifstream input= std::ifstream(arg_filePath, std::ios::in | std::ios::binary);
-
     auto p_fontLoad = std::make_shared< FontLoadData>();
     p_fontLoad->name = std::string(arg_filePath);
-
-
     auto current = input.tellg();
     input.seekg(0, std::ios::end);
     p_fontLoad->FontDataSize = input.tellg() - current;
     input.seekg(current);
-
-
-
     p_fontLoad->FontData = malloc(p_fontLoad->FontDataSize);
-
     input.read((char*)p_fontLoad->FontData, p_fontLoad->FontDataSize);
-
     p_fontLoad->SizePixels = size;
     switch (arg_lang)
     {
@@ -1623,6 +1614,33 @@ void ButiFont::LoadTTF(const char* arg_filePath, const std::int32_t size, ButiFo
     delete p_atlas;
 }
 
+BUTIFONT_API void ButiFont::LoadTTF(const char* arg_fontName, const char* arg_data, const std::int32_t arg_dataSize, const std::int32_t size, ButiFont::FontLanguage arg_lang, std::int32_t* arg_output_width, std::int32_t* arg_output_height, unsigned char** arg_output_atlasTextureData, IFontInformation** arg_output_fontInfo)
+{
+    auto p_fontLoad = std::make_shared< FontLoadData>();
+    p_fontLoad->name = arg_fontName;
+    p_fontLoad->FontDataSize = arg_dataSize;
+    p_fontLoad->FontData = malloc(p_fontLoad->FontDataSize);
+    memcpy_s(reinterpret_cast<char*>(p_fontLoad->FontData), p_fontLoad->FontDataSize, arg_data, p_fontLoad->FontDataSize);
+    p_fontLoad->SizePixels = size;
+    switch (arg_lang)
+    {
+    case ButiFont::FontLanguage::FONTLANG_JAPANESE:
+        p_fontLoad->GlyphRanges = GetGlyphRangesJapanese();
+        break;
+    default:
+        assert(0);
+        break;
+    }
+    auto p_atlas = new FontAtlas();
+    p_atlas->PushFont(p_fontLoad);
+    CreateFontFromFile(p_atlas, arg_output_width, arg_output_height, arg_output_atlasTextureData, arg_output_fontInfo);
+    delete p_atlas;
+}
+
+void ButiFont::ReleaseMemory(IFontInformation* arg_release)
+{
+    delete arg_release;
+}
 void ButiFont::ReleaseMemory(void* arg_release)
 {
     delete arg_release;

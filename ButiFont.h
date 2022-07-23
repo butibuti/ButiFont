@@ -43,6 +43,7 @@ enum class FontLanguage {
 /// </summary>
 class IFontInformation {
 public:
+	virtual ~IFontInformation(){}
 	virtual const ButiFont::FontGlyph* * FindGlyphs_utf8(const char* arg_srcStr, std::int32_t& arg_ref_glyphSize) const= 0;
 	virtual std::int32_t GetSize()const = 0;
 };
@@ -58,8 +59,29 @@ public:
 /// <param name="arg_output_atlasTextureData">フォントアトラスのピクセルデータ(出力)</param>
 /// <param name="arg_output_fontInfo">フォントの使用情報(出力)</param>
 /// <returns></returns>
-extern BUTIFONT_API void LoadTTF(const char* arg_filePath, const std::int32_t size, ButiFont::FontLanguage arg_lang,  std::int32_t* arg_output_width,  std::int32_t* arg_output_height,unsigned char** arg_output_atlasTextureData, IFontInformation** arg_output_fontInfo);
+extern BUTIFONT_API void LoadTTFFile(const char* arg_filePath, const std::int32_t size, ButiFont::FontLanguage arg_lang, std::int32_t* arg_output_width, std::int32_t* arg_output_height, unsigned char** arg_output_atlasTextureData, IFontInformation** arg_output_fontInfo);
 
+/// <summary>
+/// True Type Font　規格のフォントファイルの読み込み
+/// </summary>
+/// <param name="arg_fontName">フォント名</param>
+/// <param name="arg_data">TTFデータの先頭ポインタ</param>
+/// <param name="arg_dataSize">TTFデータの大きさ</param>
+/// <param name="size">フォント解像度</param>
+/// <param name="arg_lang">使用する言語</param>
+/// <param name="arg_output_width">フォントアトラスの横サイズ(出力)</param>
+/// <param name="arg_output_height">フォントアトラスの縦サイズ(出力)</param>
+/// <param name="arg_output_atlasTextureData">フォントアトラスのピクセルデータ(出力)</param>
+/// <param name="arg_output_fontInfo">フォントの使用情報(出力)</param>
+/// <returns></returns>
+extern BUTIFONT_API void LoadTTF(const char* arg_fontName, const char* arg_data, const std::int32_t arg_dataSize, const std::int32_t size, ButiFont::FontLanguage arg_lang, std::int32_t* arg_output_width, std::int32_t* arg_output_height, unsigned char** arg_output_atlasTextureData, IFontInformation** arg_output_fontInfo);
+
+/// <summary>
+/// ButiFontが確保したメモリの解放
+/// </summary>
+/// <param name="arg_release">解放するメモリのアドレス</param>
+/// <returns></returns>
+extern BUTIFONT_API void ReleaseMemory(IFontInformation* arg_release);
 /// <summary>
 /// ButiFontが確保したメモリの解放
 /// </summary>
