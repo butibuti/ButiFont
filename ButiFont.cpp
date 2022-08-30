@@ -1527,8 +1527,6 @@ void FontGlyphRangesBuilder::BuildRanges(std::vector<std::uint16_t>* out_ranges)
 
 const ButiFont::FontGlyph** FontInformation::FindGlyphs_utf8(const char* arg_srcStr, std::int32_t& arg_ref_glyphSize)const
 {
-
-
     const char* s = arg_srcStr;
     auto end = FindRenderedTextEnd(s, nullptr);
     std::vector<const ButiFont::FontGlyph*> vec_temp;
@@ -1536,9 +1534,6 @@ const ButiFont::FontGlyph** FontInformation::FindGlyphs_utf8(const char* arg_src
     {
 
         std::uint32_t c = *s;
-
-
-
         if (c < 0x80)
         {
             s += 1;
@@ -1565,13 +1560,16 @@ const ButiFont::FontGlyph** FontInformation::FindGlyphs_utf8(const char* arg_src
             }
         }
 
-        if (c >= (size_t)vec_indexLookup.size())
+        if (c >= vec_indexLookup.size())
             vec_temp.push_back(p_fallback);
         const std::uint16_t i = vec_indexLookup[c];
-        if (i == (std::uint16_t)-1)
+        if (i == static_cast<std::uint16_t>(-1) || i >= vec_glyphs.size())
+        {
             vec_temp.push_back(p_fallback);
-
-        vec_temp.push_back(&vec_glyphs[i]);
+        }
+        else {
+            vec_temp.push_back(&vec_glyphs[i]);
+        }
     }
     const ButiFont::FontGlyph** output = (const ButiFont::FontGlyph**)malloc(sizeof(const ButiFont::FontGlyph*) * vec_temp.size());
 
