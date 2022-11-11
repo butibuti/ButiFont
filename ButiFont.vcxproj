@@ -144,6 +144,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)Libs\Library;$(SolutionDir)Libs\Library\ButiEngineHeader</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -151,7 +152,7 @@
       <EnableUAC>false</EnableUAC>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y /d "$(SolutionDir)Libs\dll\$(Configuration)" "$(SolutionDir)output\$(Configuration)"</Command>
+      <Command>xcopy /y /d "$(SolutionDir)Libs\dll\$(Configuration)\$(ProjectName).dll" "$(SolutionDir)output\$(Configuration)\"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -167,6 +168,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)Libs\Library;$(SolutionDir)Libs\Library\ButiEngineHeader</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -176,7 +178,7 @@
       <EnableUAC>false</EnableUAC>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y /d "$(SolutionDir)Libs\dll\$(Configuration)" "$(SolutionDir)output\$(Configuration)"</Command>
+      <Command>xcopy /y /d "$(SolutionDir)Libs\dll\$(Configuration)\$(ProjectName).dll" "$(SolutionDir)output\$(Configuration)\"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
